@@ -46,12 +46,12 @@ double M1 = 10;
 double M2 = 10;
 
 
-void stayStraight(){
-  unsigned int sensors[14];
+void stayStraight(int position){
+  //unsigned int sensors[14];
   // get calibrated sensor values returned in the sensors array, along with the line position
   // position will range from 0 to 2000, with 1000 corresponding to the line over the middle 
   // sensor
-  int position = qtrrc.readLine(sensors, QTR_EMITTERS_ON, black_line);
+  //int position = qtrrc.readLine(sensors, QTR_EMITTERS_ON, black_line);
  
   // compute our "error" from the line position.  We will make it so that the error is zero when
   // the middle sensor is over the line, because this is our goal.  Error will range from
@@ -163,7 +163,7 @@ void loop()
   Serial.println();
   // need logic here to see if we want to turn left, right, or stay straight
   // follow mode: 0 = idle, 1 = turn left, 2 = stay straight, 3 = turn right, 4 = backwards.
-  //stayStraight();
+  stayStraight(position);
   delay(500);
   // test comment for commit
 }

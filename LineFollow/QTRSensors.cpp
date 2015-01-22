@@ -335,7 +335,7 @@ int QTRSensors::readLine(unsigned int *sensor_values,
         }
 
         // only average in values that are above a noise threshold
-        if(value > 300) {        // default was 50
+        if(value > 400) {        // default was 50
             avg += (long)(value) * (i * 1000);
             sum += value;
         }
