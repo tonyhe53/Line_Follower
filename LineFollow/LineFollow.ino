@@ -39,12 +39,12 @@
 QTRSensorsRC qtrrc((unsigned char[]) {5, 6, 7, 8, 9, 10, A0, A1, A2, A3, A4, A5, 3, 4},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN); 
 unsigned int sensorValues[NUM_SENSORS];
-int lastError = 0;
+double lastError = 0;
 double KP = 0.1;
 double KD = 5;
-double M1 = 10;
-double M2 = 10;
-
+double M1 = 50;
+double M2 = 50;
+int normFactor = 1000;
 
 void stayStraight(int position){
   //unsigned int sensors[14];
@@ -58,36 +58,36 @@ void stayStraight(int position){
   // -1000 to +1000.  If we have sensor 0 on the left and sensor 2 on the right,  a reading of 
   // -1000 means that we see the line on the left and a reading of +1000 means we see the 
   // line on the right.
-  int error = position - 7000;
+  double error = (position - 7000)/normFactor;
  
   // set the motor speed based on proportional and derivative PID terms
   // KP is the a floating-point proportional constant (maybe start with a value around 0.1)
   // KD is the floating-point derivative constant (maybe start with a value around 5)
   // note that when doing PID, it's very important you get your signs right, or else the
   // control loop will be unstable
-  int motorSpeed = KP * error + KD * (error - lastError);
-  lastError = error;
+  double motorSpeed = KP * error + KD * (error - lastError);
+  lastError = error/normFactor;
  
   // M1 and M2 are base motor speeds.  That is to say, they are the speeds the motors should
   // spin at if you are perfectly on the line with no error.  If your motors are well matched,
   // M1 and M2 will be equal.  When you start testing your PID loop, it might help to start with
   // small values for M1 and M2.  You can then increase the speed as you fine-tune your
   // PID constants KP and KD.
-  int m1Speed = M1 + motorSpeed;
-  int m2Speed = M2 - motorSpeed;
+  double m1Speed = M1 + motorSpeed;
+  double m2Speed = M2 - motorSpeed;
  
   // it might help to keep the speeds positive (this is optional)
   // note that you might want to add a similiar line to keep the speeds from exceeding
   // any maximum allowed value
-  if (m1Speed < 0)
-    m1Speed = 0;
-  if (m2Speed < 0)
-    m2Speed = 0;
+  if (m1Speed < 10)
+    m1Speed = 10;
+  if (m2Speed < 10)
+    m2Speed = 10;
     
-    if (m2Speed > 300)
-    m2Speed = 300;
-     if (m1Speed > 300)
-     m1Speed = 300;
+    if (m2Speed > 100)
+    m2Speed = 100;
+     if (m1Speed > 100)
+     m1Speed = 100;
  
   // set motor speeds using the two motor speed variables above
   Serial.print("LS: ");
