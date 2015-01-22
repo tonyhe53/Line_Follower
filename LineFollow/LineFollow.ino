@@ -1,4 +1,4 @@
-#include <QTRSensors.h>
+#include "QTRSensors.h"
 
 // This example is designed for use with eight QTR-1RC sensors or the eight sensors of a
 // QTR-8RC module.  These reflectance sensors should be connected to digital inputs 3 to 10.
