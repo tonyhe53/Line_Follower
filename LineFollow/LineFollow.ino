@@ -90,6 +90,7 @@ void stayStraight(int position){
      m1Speed = 100;
  
   // set motor speeds using the two motor speed variables above
+  /*
   Serial.print("LS: ");
   Serial.print(m1Speed);
   Serial.print("     RS: ");
@@ -97,6 +98,10 @@ void stayStraight(int position){
   Serial.print("     ");
   Serial.print(position);
   Serial.println();
+  */
+  
+  Serial.print(m1Speed);
+  Serial.print(m2Speed+200);
 }
 
 
