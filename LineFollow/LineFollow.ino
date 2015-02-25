@@ -157,15 +157,18 @@ void loop()
 
   // print the sensor values as numbers from 0 to 1000, where 0 means maximum reflectance (white) and
   // 1000 means minimum reflectance (black), followed by the line position
-  Serial.print("position = ");
-  Serial.print(position);
-  Serial.println();
+  //Serial.print("position = ");
+  //Serial.print(position);
+  //Serial.println();
+  /*
   for (unsigned char i = 0; i < NUM_SENSORS; i++)
   {
     Serial.print(sensorValues[i]);
     Serial.print('\t');
   }
   Serial.println();
+  */
+  
   // need logic here to see if we want to turn left, right, or stay straight
   // follow mode: 0 = idle, 1 = turn left, 2 = stay straight, 3 = turn right, 4 = backwards.
   stayStraight(position);
