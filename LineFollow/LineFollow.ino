@@ -100,8 +100,8 @@ void stayStraight(int position){
   Serial.println();
   */
   
-  Serial.print(m1Speed);
-  Serial.print(m2Speed+200);
+  Serial.println(m1Speed);
+  Serial.println(m2Speed+200);
 }
 
 
