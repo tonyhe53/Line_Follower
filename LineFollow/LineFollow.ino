@@ -76,6 +76,8 @@ void stayStraight(int position){
   double m1Speed = M1 + motorSpeed;
   double m2Speed = M2 - motorSpeed;
  
+ byte* b1 = (byte*) &m1Speed;
+ byte* b2 = (byte*) &m2Speed;
   // it might help to keep the speeds positive (this is optional)
   // note that you might want to add a similiar line to keep the speeds from exceeding
   // any maximum allowed value
@@ -100,8 +102,8 @@ void stayStraight(int position){
   Serial.println();
   */
   
-  Serial.print(m1Speed);
-  Serial.print(m2Speed+200);
+  Serial.write(b1, 4);
+  Serial.write(b2, 4);
 }
 
 
