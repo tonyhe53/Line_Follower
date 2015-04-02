@@ -39,72 +39,9 @@
 QTRSensorsRC qtrrc((unsigned char[]) {5, 6, 7, 8, 9, 10, A0, A1, A2, A3, A4, A5, 3, 4},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN); 
 unsigned int sensorValues[NUM_SENSORS];
-double lastError = 0;
-double KP = 0.1;
-double KD = 5;
-double M1 = 50;
-double M2 = 50;
 int normFactor = 1000;
-
-void stayStraight(int position){
-  //unsigned int sensors[14];
-  // get calibrated sensor values returned in the sensors array, along with the line position
-  // position will range from 0 to 2000, with 1000 corresponding to the line over the middle 
-  // sensor
-  //int position = qtrrc.readLine(sensors, QTR_EMITTERS_ON, black_line);
- 
-  // compute our "error" from the line position.  We will make it so that the error is zero when
-  // the middle sensor is over the line, because this is our goal.  Error will range from
-  // -1000 to +1000.  If we have sensor 0 on the left and sensor 2 on the right,  a reading of 
-  // -1000 means that we see the line on the left and a reading of +1000 means we see the 
-  // line on the right.
-  double error = (position - 7000)/normFactor;
- 
-  // set the motor speed based on proportional and derivative PID terms
-  // KP is the a floating-point proportional constant (maybe start with a value around 0.1)
-  // KD is the floating-point derivative constant (maybe start with a value around 5)
-  // note that when doing PID, it's very important you get your signs right, or else the
-  // control loop will be unstable
-  double motorSpeed = KP * error + KD * (error - lastError);
-  lastError = error/normFactor;
- 
-  // M1 and M2 are base motor speeds.  That is to say, they are the speeds the motors should
-  // spin at if you are perfectly on the line with no error.  If your motors are well matched,
-  // M1 and M2 will be equal.  When you start testing your PID loop, it might help to start with
-  // small values for M1 and M2.  You can then increase the speed as you fine-tune your
-  // PID constants KP and KD.
-  double m1Speed = M1 + motorSpeed;
-  double m2Speed = M2 - motorSpeed;
- 
- byte* b1 = (byte*) &m1Speed;
- byte* b2 = (byte*) &m2Speed;
-  // it might help to keep the speeds positive (this is optional)
-  // note that you might want to add a similiar line to keep the speeds from exceeding
-  // any maximum allowed value
-  if (m1Speed < 10)
-    m1Speed = 10;
-  if (m2Speed < 10)
-    m2Speed = 10;
-    
-    if (m2Speed > 100)
-    m2Speed = 100;
-     if (m1Speed > 100)
-     m1Speed = 100;
- 
-  // set motor speeds using the two motor speed variables above
-  /*
-  Serial.print("LS: ");
-  Serial.print(m1Speed);
-  Serial.print("     RS: ");
-  Serial.print(m2Speed);
-  Serial.print("     ");
-  Serial.print(position);
-  Serial.println();
-  */
-  
-  Serial.write(b1, 4);
-  Serial.write(b2, 4);
-}
+char incomingByte;
+char output_string[100];
 
 
 void setup()
@@ -147,6 +84,26 @@ void setup()
   delay(1000);
 }
 
+void serialEvent(){
+  // read the incoming byte:
+  incomingByte = Serial.read();
+  // parse the input
+  /*
+  '1' = read sensor  
+  */
+  switch (incomingByte) {
+    
+    case '1':
+    sprintf(output_string, "Sensors 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u 8:%u 9:%u 10:%u 11:%u 12:%u 13:%u", sensorValues[0], sensorValues[1], sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5], sensorValues[6], sensorValues[7], sensorValues[8], sensorValues[9], sensorValues[10], sensorValues[11], sensorValues[12], sensorValues[13]);
+    Serial.print(output_string);
+    break;
+    
+    default: // did not match one of the cases
+    Serial.println("Did not match a case");
+    
+  }
+
+}
 
 void loop()
 {
@@ -154,26 +111,6 @@ void loop()
   // To get raw sensor values, call:
   //  qtrrc.read(sensorValues); instead of unsigned int position = qtrrc.readLine(sensorValues);
   unsigned int position = qtrrc.readLine(sensorValues, QTR_EMITTERS_ON, black_line);
-  int pos, low = 1000;
-  //qtrrc.read(sensorValues);
 
-  // print the sensor values as numbers from 0 to 1000, where 0 means maximum reflectance (white) and
-  // 1000 means minimum reflectance (black), followed by the line position
-  //Serial.print("position = ");
-  //Serial.print(position);
-  //Serial.println();
-  /*
-  for (unsigned char i = 0; i < NUM_SENSORS; i++)
-  {
-    Serial.print(sensorValues[i]);
-    Serial.print('\t');
-  }
-  Serial.println();
-  */
   
-  // need logic here to see if we want to turn left, right, or stay straight
-  // follow mode: 0 = idle, 1 = turn left, 2 = stay straight, 3 = turn right, 4 = backwards.
-  stayStraight(position);
-  delay(500);
-  // test comment for commit
 }
