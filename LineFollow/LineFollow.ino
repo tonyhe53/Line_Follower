@@ -94,8 +94,8 @@ void serialEvent(){
   switch (incomingByte) {
     
     case '1':
-    sprintf(output_string, "Sensors 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u 8:%u 9:%u 10:%u 11:%u 12:%u 13:%u", sensorValues[0], sensorValues[1], sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5], sensorValues[6], sensorValues[7], sensorValues[8], sensorValues[9], sensorValues[10], sensorValues[11], sensorValues[12], sensorValues[13]);
-    Serial.print(output_string);
+    sprintf(output_string, "0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u 8:%u 9:%u 10:%u 11:%u 12:%u 13:%u", sensorValues[0], sensorValues[1], sensorValues[2], sensorValues[3], sensorValues[4], sensorValues[5], sensorValues[6], sensorValues[7], sensorValues[8], sensorValues[9], sensorValues[10], sensorValues[11], sensorValues[12], sensorValues[13]);
+    Serial.println(output_string);
     break;
     
     default: // did not match one of the cases
