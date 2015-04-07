@@ -30,6 +30,7 @@ def getSensorVals(ser):
 			for x in strWColon:
 				lsh, rhs = x.split(":")			
 				rhs = float(rhs)
+				rhs = 1000-rhs #comment this line out if it is black line on white paper
 				sensorVals.append(rhs)
 	ser.close()
 	return sensorVals
@@ -57,6 +58,21 @@ def setMotorspeed(Left_Motor_Pin, Right_Motor_Pin, LeftMotor_speed, RightMotor_s
 	PWM.set_duty_cycle(Left_Motor_Pin, LeftMotor_speed)  
 	PWM.set_duty_cycle(Right_Motor_Pin, RightMotor_speed) 
 	return
+	
+def detectTurn(line, threshold):
+	
+	if line[0] > threshold and line[1] > threshold  and line[2] > threshold and line[3] > threshold:
+		return "left"
+	if line[10] > threshold and line[11] > threshold  and line[12] > threshold and line[13] > threshold:
+		return "right"
+	return "none"
+	
+def detectEvent(line, threshold, eventCount):
+	if line[0] > threshold and line[1] > threshold  and line[2] > threshold and line[3] > threshold and line[4] > threshold and line[5] > threshold and line[6] > threshold and line[7] > threshold and line[8] > threshold and line[9] > threshold and line[10] > threshold and line[11] > threshold and line[12] > threshold and line[13] > threshold :
+		eventCount += 1
+		return True, eventCount
+	else:
+		return False, eventCount
 	
 #The recipe gives simple implementation of a Discrete Proportional-Integral-Derivative (PID) controller. PID controller gives output value for error between desired reference input and measurement feedback to minimize error value.
 #More information: http://en.wikipedia.org/wiki/PID_controller
@@ -160,6 +176,7 @@ Right_Motor_Direction = "P9_25"
 ser = serial.Serial(port = "/dev/ttyO4", baudrate = 9600)
 GPIO.setup(Left_Motor_Direction, GPIO.OUT)
 GPIO.setup(Right_Motor_Direction, GPIO.OUT)
+GPIO.setup("P8_7",GPIO.IN)
 PWM.start(Left_Motor_Pin, 0.0, 20000, 1) #Motor 1 (Left)
 PWM.start(Right_Motor_Pin, 0.0, 20000, 1) #Motor 2 (Right)
 p = PID(0.001,0.0,0.0) # set up PID with KP, KI, KD
@@ -170,12 +187,48 @@ GPIO.output(Right_Motor_Direction, GPIO.HIGH)
 
 var = 1
 base_speed = 15
+eventCount = 0
+
+#1 = dont go (LED on)
+#0 = go (LED off)
+
+while GPIO.input("P8_7")==1: #loop while LED is on.
+	print "waiting for LED to turn off"
+	time.sleep(0.1)
 
 while var == 1 :
 	sensorVals = getSensorVals(ser)
 	linePos = getLinePos(sensorVals)
+	eventAvailable,eventCount = detectEvent(sensorVals, 850, eventCount)
+	"""
+	if eventAvailable
+		if eventCount == 1: #in starting box. keep going direction we're going until we don't see a box anymore.
+			stayStragightUntilOutOfBox()
+		elif eventCount == 2: #2nd event
+			etchASketch()
+			turnAround()
+			stayStraightUntilOutOfBox()
+		elif eventCount == 3: #3rd event
+			
+		else:
+			print "eventCountAboveLimit"
+	"""
+	#turnAvailable = detectTurn(sensorVals, 850)
+	""""
+	if turnAvailable == "left":
+		print "turn Left Detected"
+		#turnLeft()
+		continue
+	elif turnAvailable == "right":
+		print "turn Right detected"
+		#turnRight()
+		continue
+		"""
 	LeftMotor_speed, RightMotor_speed = getMotorspeeds(base_speed, p, linePos)
 	setMotorspeed(Left_Motor_Pin, Right_Motor_Pin, LeftMotor_speed, RightMotor_speed)
+	
+	start_detection = GPIO.input("P8_7")
+	print "Start: ", start_detection
 	print sensorVals
 	print "Line position = ", linePos
 	print 'Left MS: ', LeftMotor_speed
