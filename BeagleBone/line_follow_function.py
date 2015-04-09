@@ -42,10 +42,10 @@ def getMotorspeeds(base_speed, p, currpos):
 	m2Speed = base_speed - motorval
 
 
-	if m1Speed < 10:
-		m1Speed = 10
-	if m2Speed < 10:
-		m2Speed = 10
+	if m1Speed < 5:
+		m1Speed = 5
+	if m2Speed < 5:
+		m2Speed = 5
 
 	if m1Speed > 100:
 		m1Speed = 100
@@ -82,7 +82,7 @@ def turnLeft():
 	GPIO.output(Right_Motor_Direction, GPIO.HIGH)
 	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
 	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
-	time.sleep(1) #wait one second for turn
+	time.sleep(2) #wait one second for turn
 	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor back to forwards direction
 	
 def turnRight():
@@ -91,19 +91,19 @@ def turnRight():
 	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left to go forwards
 	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
 	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
-	time.sleep(1) #wait one second for turn
+	time.sleep(2) #wait one second for turn
 	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor back to forwards direction
 	
-def stayStragightUntilOutOfBox():
-	base_speed = 15
+def stayStraightUntilOutOfBox():
 	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor to go forward.
 	GPIO.output(Right_Motor_Direction, GPIO.HIGH) #right motor forward
-	sensorVals = getSensorVals(ser)
-	while sensorVals < 14 * [black_line]: #keep going until one of the sensors reads a black line.
-		PWM.set_duty_cycle(Left_Motor_Pin, base_speed)  
-		PWM.set_duty_cycle(Right_Motor_Pin, base_speed)
-	PWM.set_duty_cycle(Left_Motor_Pin, 0)  
-	PWM.set_duty_cycle(Right_Motor_Pin, 0)
+	# sensorVals = getSensorVals(ser)
+	# while sensorVals < 14 * [black_line]: #keep going until one of the sensors reads a black line.
+		# PWM.set_duty_cycle(Left_Motor_Pin, base_speed)
+		# PWM.set_duty_cycle(Right_Motor_Pin, base_speed)
+	PWM.set_duty_cycle(Left_Motor_Pin, 10)
+	PWM.set_duty_cycle(Right_Motor_Pin, 10)
+    time.sleep(2)
 	return
 	
 	
@@ -211,8 +211,10 @@ ser = serial.Serial(port = "/dev/ttyO4", baudrate = 9600)
 GPIO.setup(Left_Motor_Direction, GPIO.OUT)
 GPIO.setup(Right_Motor_Direction, GPIO.OUT)
 GPIO.setup(Start_Detection,GPIO.IN)
-PWM.start(Left_Motor_Pin, 0.0, 20000, 1) #Motor 1 (Left)
-PWM.start(Right_Motor_Pin, 0.0, 20000, 1) #Motor 2 (Right)
+PWM.start(Left_Motor_Pin, 0.0, 20000, 1)                            #Motor 1 (Left)
+PWM.start(Right_Motor_Pin, 0.0, 20000, 1)                           #Motor 2 (Right)
+PWM.set_duty_cycle(Left_Motor_Pin, 0)                               #initialize PWM
+PWM.set_duty_cycle(Right_Motor_Pin, 0)                              
 p = PID(0.001,0.0,0.0) # set up PID with KP, KI, KD
 p.setPoint(6500) #setpoint to middle of device.
 black_line = 200
@@ -221,7 +223,7 @@ GPIO.output(Left_Motor_Direction, GPIO.HIGH)
 GPIO.output(Right_Motor_Direction, GPIO.HIGH)
 
 var = 1
-base_speed = 15
+base_speed = 10
 eventCount = 0
 
 #time.sleep(5) #wait for calibration of line follower
@@ -242,16 +244,18 @@ while var == 1 :
 
 	if eventAvailable:
 		if eventCount == 1: #in starting box. keep going direction we're going until we don't see a box anymore.
-			stayStragightUntilOutOfBox()
+            print "stayStra
+			stayStraightUntilOutOfBox()
 			print "event Count = ", eventCount
 			#time.sleep(1)
 		elif eventCount == 2: #2nd event
 			print "event Count = ", eventCount
+            turnLeft()
 			#time.sleep(1)
 			#etchASketch()
 			#turnAround()
 			#stayStraightUntilOutOfBox()
-			#continue
+			continue
 		elif eventCount == 3: #3rd event
 			print "event Count = ", eventCount
 			#time.sleep(1)
@@ -267,6 +271,8 @@ while var == 1 :
 			continue
 		elif turnAvailable == "right":
 			print "turn Right detected"
+            if eventCount == 2:
+                stayStraightUntilOutOfBox()
 			turnRight()
 			continue
 
@@ -279,5 +285,3 @@ while var == 1 :
 	print "Line position = ", linePos
 	print 'Left MS: ', LeftMotor_speed
 	print 'Right MS: ', RightMotor_speed
-
-
