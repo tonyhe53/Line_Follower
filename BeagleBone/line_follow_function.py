@@ -62,17 +62,50 @@ def setMotorspeed(Left_Motor_Pin, Right_Motor_Pin, LeftMotor_speed, RightMotor_s
 def detectTurn(line, threshold):
 	
 	if line[0] > threshold and line[1] > threshold  and line[2] > threshold and line[3] > threshold:
-		return "left"
-	if line[10] > threshold and line[11] > threshold  and line[12] > threshold and line[13] > threshold:
 		return "right"
+	if line[10] > threshold and line[11] > threshold  and line[12] > threshold and line[13] > threshold:
+		return "left"
 	return "none"
 	
 def detectEvent(line, threshold, eventCount):
-	if line[0] > threshold and line[1] > threshold  and line[2] > threshold and line[3] > threshold and line[4] > threshold and line[5] > threshold and line[6] > threshold and line[7] > threshold and line[8] > threshold and line[9] > threshold and line[10] > threshold and line[11] > threshold and line[12] > threshold and line[13] > threshold :
-		eventCount += 1
-		return True, eventCount
-	else:
-		return False, eventCount
+	for x in line:
+		if x < threshold:
+			return False, eventCount
+	eventCount += 1
+	print "event Found!!!!"
+	return True, eventCount
+	
+		
+def turnLeft():
+	turn_speed = 15
+	GPIO.output(Left_Motor_Direction, GPIO.LOW) #set left motor to go backwards.
+	GPIO.output(Right_Motor_Direction, GPIO.HIGH)
+	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
+	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
+	time.sleep(1) #wait one second for turn
+	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor back to forwards direction
+	
+def turnRight():
+	turn_speed = 15
+	GPIO.output(Right_Motor_Direction, GPIO.LOW) #set right motor to go backwards.
+	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left to go forwards
+	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
+	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
+	time.sleep(1) #wait one second for turn
+	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor back to forwards direction
+	
+def stayStragightUntilOutOfBox():
+	base_speed = 15
+	GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor to go forward.
+	GPIO.output(Right_Motor_Direction, GPIO.HIGH) #right motor forward
+	sensorVals = getSensorVals(ser)
+	while sensorVals < 14 * [black_line]: #keep going until one of the sensors reads a black line.
+		PWM.set_duty_cycle(Left_Motor_Pin, base_speed)  
+		PWM.set_duty_cycle(Right_Motor_Pin, base_speed)
+	PWM.set_duty_cycle(Left_Motor_Pin, 0)  
+	PWM.set_duty_cycle(Right_Motor_Pin, 0)
+	return
+	
 	
 #The recipe gives simple implementation of a Discrete Proportional-Integral-Derivative (PID) controller. PID controller gives output value for error between desired reference input and measurement feedback to minimize error value.
 #More information: http://en.wikipedia.org/wiki/PID_controller
@@ -173,14 +206,16 @@ Left_Motor_Pin = "P8_19"
 Right_Motor_Pin = "P9_14"
 Left_Motor_Direction = "P9_26"
 Right_Motor_Direction = "P9_25"
+Start_Detection = "P8_7"
 ser = serial.Serial(port = "/dev/ttyO4", baudrate = 9600)
 GPIO.setup(Left_Motor_Direction, GPIO.OUT)
 GPIO.setup(Right_Motor_Direction, GPIO.OUT)
-GPIO.setup("P8_7",GPIO.IN)
+GPIO.setup(Start_Detection,GPIO.IN)
 PWM.start(Left_Motor_Pin, 0.0, 20000, 1) #Motor 1 (Left)
 PWM.start(Right_Motor_Pin, 0.0, 20000, 1) #Motor 2 (Right)
 p = PID(0.001,0.0,0.0) # set up PID with KP, KI, KD
 p.setPoint(6500) #setpoint to middle of device.
+black_line = 200
 
 GPIO.output(Left_Motor_Direction, GPIO.HIGH)
 GPIO.output(Right_Motor_Direction, GPIO.HIGH)
@@ -189,41 +224,52 @@ var = 1
 base_speed = 15
 eventCount = 0
 
+#time.sleep(5) #wait for calibration of line follower
+
+
 #1 = dont go (LED on)
 #0 = go (LED off)
-
-while GPIO.input("P8_7")==1: #loop while LED is on.
+#Start detection below
+while GPIO.input(Start_Detection)==1: #loop while LED is on.
 	print "waiting for LED to turn off"
 	time.sleep(0.1)
 
+#LED off. Now start code.
 while var == 1 :
 	sensorVals = getSensorVals(ser)
 	linePos = getLinePos(sensorVals)
 	eventAvailable,eventCount = detectEvent(sensorVals, 850, eventCount)
-	"""
-	if eventAvailable
+
+	if eventAvailable:
 		if eventCount == 1: #in starting box. keep going direction we're going until we don't see a box anymore.
 			stayStragightUntilOutOfBox()
+			print "event Count = ", eventCount
+			#time.sleep(1)
 		elif eventCount == 2: #2nd event
-			etchASketch()
-			turnAround()
-			stayStraightUntilOutOfBox()
+			print "event Count = ", eventCount
+			#time.sleep(1)
+			#etchASketch()
+			#turnAround()
+			#stayStraightUntilOutOfBox()
+			#continue
 		elif eventCount == 3: #3rd event
-			
+			print "event Count = ", eventCount
+			#time.sleep(1)
 		else:
 			print "eventCountAboveLimit"
-	"""
-	#turnAvailable = detectTurn(sensorVals, 850)
-	""""
-	if turnAvailable == "left":
-		print "turn Left Detected"
-		#turnLeft()
-		continue
-	elif turnAvailable == "right":
-		print "turn Right detected"
-		#turnRight()
-		continue
-		"""
+
+	else: #event was not found. look for a turn
+		turnAvailable = detectTurn(sensorVals, 850)
+
+		if turnAvailable == "left":
+			print "turn Left Detected"
+			turnLeft()
+			continue
+		elif turnAvailable == "right":
+			print "turn Right detected"
+			turnRight()
+			continue
+
 	LeftMotor_speed, RightMotor_speed = getMotorspeeds(base_speed, p, linePos)
 	setMotorspeed(Left_Motor_Pin, Right_Motor_Pin, LeftMotor_speed, RightMotor_speed)
 	
