@@ -2,7 +2,6 @@ import Adafruit_BBIO.UART as UART
 import serial
 import Adafruit_BBIO.PWM as PWM
 import Adafruit_BBIO.GPIO as GPIO
-import PID
 import time
 
 def getLinePos(sensorVals):
