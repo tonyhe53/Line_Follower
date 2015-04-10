@@ -77,36 +77,52 @@ def detectEvent(line, threshold, eventCount):
 	
 		
 def turnLeft():
-	if lastEvent != "Left Turn":
-		turn_speed = 15
-		GPIO.output(Left_Motor_Direction, leftBackward) #set left motor to go backwards.
-		GPIO.output(Right_Motor_Direction, rightForward)
-		PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
-		PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
-		time.sleep(2) #wait one second for turn
-		GPIO.output(Left_Motor_Direction, leftForward) #set left motor back to forwards direction
-		print sensorVals
-	
+
+	print sensorVals
+	turn_speed = 12
+	GPIO.output(Left_Motor_Direction, leftBackward) #set left motor to go backwards.
+	GPIO.output(Right_Motor_Direction, rightForward)
+	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
+	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
+	time.sleep(2) #wait one second for turn
+	PWM.set_duty_cycle(Left_Motor_Pin, 0)
+	PWM.set_duty_cycle(Right_Motor_Pin, 0)
+	GPIO.output(Left_Motor_Direction, leftForward) #set left motor back to forwards direction
+	GPIO.output(Right_Motor_Direction, rightBorward) #set Right motor back to forward direction
+	return
+
 def turnRight():
-	if lastEvent != "Right Turn":
-		turn_speed = 15
-		GPIO.output(Right_Motor_Direction, rightBackward) #set right motor to go backwards.
-		GPIO.output(Left_Motor_Direction, leftForward) #set left to go forwards
-		PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
-		PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
-		time.sleep(2) #wait one second for turn
-		GPIO.output(Left_Motor_Direction, GPIO.HIGH) #set left motor back to forwards direction
+
+	print sensorVals
+	turn_speed = 12
+	GPIO.output(Right_Motor_Direction, rightBackward) #set right motor to go backwards.
+	GPIO.output(Left_Motor_Direction, leftForward) #set left to go forwards
+	PWM.set_duty_cycle(Left_Motor_Pin, turn_speed)  
+	PWM.set_duty_cycle(Right_Motor_Pin, turn_speed) 
+	time.sleep(2) #wait one second for turn
+	PWM.set_duty_cycle(Left_Motor_Pin, 0)
+	PWM.set_duty_cycle(Right_Motor_Pin, 0)
+	GPIO.output(Left_Motor_Direction, leftForward) #set left motor back to forwards direction
+	GPIO.output(Right_Motor_Direction, rightBorward) #set Right motor back to forward direction
+	return
+	
+def turnAround():
+	turnRight()
+	turnRight()
+	return
 	
 def stayStraightUntilOutOfBox():
 	GPIO.output(Left_Motor_Direction, leftForward) #set left motor to go forward.
 	GPIO.output(Right_Motor_Direction, rightForward) #right motor forward
 	# sensorVals = getSensorVals(ser)
-	# while sensorVals < 14 * [black_line]: #keep going until one of the sensors reads a black line.
+	# while sensorVals < 14 * [300]: #keep going until one of the sensors reads a black line.
 		# PWM.set_duty_cycle(Left_Motor_Pin, base_speed)
 		# PWM.set_duty_cycle(Right_Motor_Pin, base_speed)
 	PWM.set_duty_cycle(Left_Motor_Pin, 10)
 	PWM.set_duty_cycle(Right_Motor_Pin, 10)
-	time.sleep(3)
+	time.sleep(2)
+	PWM.set_duty_cycle(Left_Motor_Pin, 0)
+	PWM.set_duty_cycle(Right_Motor_Pin, 0)
 	return
 	
 	
@@ -246,14 +262,18 @@ while GPIO.input(Start_Detection)==1: #loop while LED is on.
 while var == 1 :
 	sensorVals = getSensorVals(ser)
 	linePos = getLinePos(sensorVals)
-	eventAvailable,eventCount = detectEvent(sensorVals, 500, eventCount)
-
+	if lastEvent != "Event Found"
+		eventAvailable,eventCount = detectEvent(sensorVals, 500, eventCount)
+	else
+		eventAvailable = False
+		
 	if eventAvailable:
 		if eventCount == 1: #in starting box. keep going direction we're going until we don't see a box anymore.
 			print "stayStraight"
 			stayStraightUntilOutOfBox()
 			print "event Count = ", eventCount
 			time.sleep(5)
+			continue
 		elif eventCount == 2: #2nd event
 			print "event Count = ", eventCount
 			turnLeft()
@@ -265,26 +285,35 @@ while var == 1 :
 		elif eventCount == 3: #3rd event
 			print "event Count = ", eventCount
 			#time.sleep(1)
+			continue
+		elif eventCount == 4: #4th Event
+			print "event Count = ", eventCount
+			continue
 		else:
 			print "eventCountAboveLimit"
 
 	else: #event was not found. look for a turn
-		turnAvailable = detectTurn(sensorVals, 550)
+		# Only look for a turn if we didn't see a turn before.
+		if (lastEvent != "Left Turn") and (lastEvent != "Right Turn"):
+			turnAvailable = detectTurn(sensorVals, 650)
 
-		if turnAvailable == "left":
-			print "turn Left Detected"
-			turnLeft()
-			continue
-		elif turnAvailable == "right":
-			print "turn Right detected"
-			if eventCount == 2:
-				stayStraightUntilOutOfBox()
-			turnRight()
-			continue
+			if turnAvailable == "left":
+				print "turn Left Detected"
+				turnLeft()
+				continue
+			elif turnAvailable == "right":
+				print "turn Right detected"
+				if eventCount == 4:
+					stayStraightUntilOutOfBox()
+					continue
+				turnRight()
+				continue
 
 	LeftMotor_speed, RightMotor_speed = getMotorspeeds(base_speed, p, linePos)
 	setMotorspeed(Left_Motor_Pin, Right_Motor_Pin, LeftMotor_speed, RightMotor_speed)
 	lastEvent = "Follow_ Line"
+	
+	
 	start_detection = GPIO.input("P8_7")
 	print "Start: ", start_detection
 	print sensorVals
