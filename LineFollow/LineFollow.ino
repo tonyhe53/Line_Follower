@@ -47,6 +47,7 @@ char output_string[100];
 void setup()
 {
   Serial.begin(9600);
+  /*
   Serial.println("Calibrating");
   delay(500);
   //pinMode(13, OUTPUT);
@@ -58,12 +59,13 @@ void setup()
   //digitalWrite(13, LOW);     // turn off Arduino's LED to indicate we are through with calibration
 
   // print the calibration minimum values measured when emitters were on
-  /*
-  unsigned int cMinOn[14] = {568, 728, 496, 736, 896, 816, 696, 576, 656, 652, 492, 576, 900, 656};
+   */
+   // Assign Calibration values manually below.
+  unsigned int cMinOn[14] = {1608, 1608, 1348, 1432, 1516, 1800, 1524, 1612, 1432, 1176, 1348, 1696, 1516, 1516};
   unsigned int cMaxOn[14] = {2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500};
   qtrrc.calibratedMinimumOn = cMinOn;
   qtrrc.calibratedMaximumOn = cMaxOn;
-  */
+  /*
   for (int i = 0; i < NUM_SENSORS; i++)
   {
     Serial.print(qtrrc.calibratedMinimumOn[i]);
@@ -81,7 +83,8 @@ void setup()
 
   Serial.println();
   Serial.println("Calibration End");
-  delay(1000);
+  */
+  delay(700);
 }
 
 void serialEvent(){
